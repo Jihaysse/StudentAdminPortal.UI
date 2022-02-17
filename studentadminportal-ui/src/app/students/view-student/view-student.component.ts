@@ -34,6 +34,9 @@ export class ViewStudentComponent implements OnInit {
     }
   }
 
+  isNewStudent: boolean = true;
+  header = '';
+
   genderList: Gender[] = [];
 
 
@@ -50,12 +53,27 @@ export class ViewStudentComponent implements OnInit {
         this.studentId = params.get('id');
 
         if (this.studentId) {
-          this.studentService.getStudent(this.studentId)
-          .subscribe(
-            (successResponse) => {
-              this.student = successResponse;
-            }
-          );
+          // Check if the route contains keyword "add"
+          // -> new student
+          if (this.studentId.toLowerCase() == "add")
+          {
+            this.isNewStudent = true;
+            this.header = "Add New Student";
+          }
+          else // existing student
+          {
+            this.isNewStudent = false;
+            this.header = "Edit Student";
+
+            this.studentService.getStudent(this.studentId)
+            .subscribe(
+              (successResponse) => {
+                this.student = successResponse;
+              }
+            );
+          }
+
+
 
           this.genderService.getGenderList()
           .subscribe(
@@ -107,5 +125,27 @@ export class ViewStudentComponent implements OnInit {
       }
     })
   };
+
+  onAdd(): void {
+    this.studentService.addStudent(this.student)
+    .subscribe(
+      {
+        next: (successResponse) => {
+          this.snackbar.open('Student added successfully', undefined, {
+            duration: 2000
+          });
+
+          // Wait until notification is gone
+          setTimeout(() => {
+            // Go back to students table
+            this.router.navigateByUrl('students');
+          }, 2000);
+        },
+        error: (errorResponse) => {
+          console.log(errorResponse);
+        }
+      }
+    );
+  }
 
 }
